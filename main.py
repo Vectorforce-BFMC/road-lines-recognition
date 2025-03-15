@@ -7,8 +7,8 @@ app = Flask(__name__)
 
 def generate_frames():
     capture1 = cv2.VideoCapture('vid1.mp4')
-    int ht = 600;
-    int wt = 400;
+    ht = 600
+    wt = 400
     
     while True:
         ret, frame = capture1.read()
