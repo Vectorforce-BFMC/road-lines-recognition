@@ -7,6 +7,8 @@ app = Flask(__name__)
 
 def generate_frames():
     capture1 = cv2.VideoCapture('vid1.mp4')
+    int ht = 600;
+    int wt = 400;
     
     while True:
         ret, frame = capture1.read()
@@ -16,10 +18,10 @@ def generate_frames():
         canny_output, masked_output, warped_binary, result, debug_img = process_frame(frame)
         
         # Resize images for display
-        canny_resized = cv2.resize(canny_output, (300, 200))
-        masked_resized = cv2.resize(masked_output, (300, 200))
-        warped_resized = cv2.resize(warped_binary, (300, 200))
-        result_resized = cv2.resize(result, (300, 200))
+        canny_resized = cv2.resize(canny_output, (ht, wt))
+        masked_resized = cv2.resize(masked_output, (ht, wt))
+        warped_resized = cv2.resize(warped_binary, (ht, wt))
+        result_resized = cv2.resize(result, (ht, wt))
         
         # Convert grayscale images to BGR for proper display
         canny_resized = cv2.cvtColor(canny_resized, cv2.COLOR_GRAY2BGR)
