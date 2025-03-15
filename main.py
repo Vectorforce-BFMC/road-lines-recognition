@@ -1,6 +1,6 @@
+from flask import Flask, Response, render_template_string
 import cv2
 import numpy as np
-from flask import Flask, Response
 from functions import process_frame, CONFIG
 
 app = Flask(__name__)
@@ -25,6 +25,14 @@ def generate_frames():
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
     
     capture1.release()
+
+@app.route('/')
+def index():
+    """Homepage with link to the video feed."""
+    return render_template_string("""
+        <h1>Live Video Feed</h1>
+        <img src="{{ url_for('video_feed') }}" width="600">
+    """)
 
 @app.route('/video_feed')
 def video_feed():
