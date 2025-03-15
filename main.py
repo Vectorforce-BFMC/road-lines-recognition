@@ -1,8 +1,11 @@
 import cv2
 import numpy as np
+from flask import Flask, Response
 from functions import process_frame, CONFIG
 
-def main():
+app = Flask(__name__)
+
+def generate_frames():
     capture1 = cv2.VideoCapture('vid1.mp4')
     
     while True:
@@ -11,29 +14,21 @@ def main():
             break
         
         canny_output, masked_output, warped_binary, result, debug_img = process_frame(frame)
+        rsimg5 = cv2.resize(result, (600, 400))  # Use the lane detection result
         
-        rsimg1 = cv2.resize(frame, (600, 400))
-        rsimg2 = cv2.resize(canny_output, (600, 400))
-        rsimg3 = cv2.resize(masked_output, (600, 400))
-        rsimg4 = cv2.resize(warped_binary, (600, 400))
-        rsimg5 = cv2.resize(result, (600, 400))
+        # Encode frame as JPEG
+        ret, buffer = cv2.imencode('.jpg', rsimg5)
+        frame_bytes = buffer.tobytes()
         
-        # Display results
-        cv2.imshow('Original Frame', rsimg1)
-        cv2.imshow('Canny Edges', rsimg2)
-        cv2.imshow('Masked Edges', rsimg3)
-        cv2.imshow('Warped Binary', rsimg4)
-        cv2.imshow('Lane Detection Result', rsimg5)
-        
-        if debug_img is not None:
-            rsimg6 = cv2.resize(debug_img, (600, 400))
-            cv2.imshow('Debug: Sliding Windows', rsimg6)
-        
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        # Yield frame in a multipart response
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
     
     capture1.release()
-    cv2.destroyAllWindows()
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
-    main()
+    app.run(host='0.0.0.0', port=5000)
