@@ -1,7 +1,7 @@
 from flask import Flask, Response, render_template_string
 import cv2
 import numpy as np
-from functions import process_frame, CONFIG
+from functions import process_frame
 
 app = Flask(__name__)
 
@@ -14,13 +14,27 @@ def generate_frames():
             break
         
         canny_output, masked_output, warped_binary, result, debug_img = process_frame(frame)
-        rsimg5 = cv2.resize(result, (600, 400))  # Use the lane detection result
+        
+        # Resize images for display
+        canny_resized = cv2.resize(canny_output, (300, 200))
+        masked_resized = cv2.resize(masked_output, (300, 200))
+        warped_resized = cv2.resize(warped_binary, (300, 200))
+        result_resized = cv2.resize(result, (300, 200))
+        
+        # Convert grayscale images to BGR for proper display
+        canny_resized = cv2.cvtColor(canny_resized, cv2.COLOR_GRAY2BGR)
+        masked_resized = cv2.cvtColor(masked_resized, cv2.COLOR_GRAY2BGR)
+        warped_resized = cv2.cvtColor(warped_resized, cv2.COLOR_GRAY2BGR)
+        
+        # Stack images in a 2x2 grid
+        top_row = np.hstack((canny_resized, masked_resized))
+        bottom_row = np.hstack((warped_resized, result_resized))
+        combined_view = np.vstack((top_row, bottom_row))
         
         # Encode frame as JPEG
-        ret, buffer = cv2.imencode('.jpg', rsimg5)
+        ret, buffer = cv2.imencode('.jpg', combined_view)
         frame_bytes = buffer.tobytes()
         
-        # Yield frame in a multipart response
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
     
@@ -28,9 +42,9 @@ def generate_frames():
 
 @app.route('/')
 def index():
-    """Homepage with link to the video feed."""
+    """Homepage with video feed."""
     return render_template_string("""
-        <h1>Live Video Feed</h1>
+        <h1>Lane Detection Pipeline</h1>
         <img src="{{ url_for('video_feed') }}" width="600">
     """)
 
